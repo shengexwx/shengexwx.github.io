@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/icon32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/icon16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文主要介绍拉普拉斯算子和图拉普拉斯矩阵。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探图卷积神经网络(二) 图的拉普拉斯矩阵">
+<meta property="og:url" content="http://example.com/2023/05/24/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%BA%8C)%20%E5%9B%BE%E7%9A%84%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E7%9F%A9%E9%98%B5/index.html">
+<meta property="og:site_name" content="温馨小站">
+<meta property="og:description" content="本文主要介绍拉普拉斯算子和图拉普拉斯矩阵。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-24T12:35:17.000Z">
+<meta property="article:modified_time" content="2023-05-26T12:13:30.450Z">
+<meta property="article:author" content="shengexwx">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="GCN">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/05/24/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%BA%8C)%20%E5%9B%BE%E7%9A%84%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E7%9F%A9%E9%98%B5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>初探图卷积神经网络(二) 图的拉普拉斯矩阵 | 温馨小站</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">温馨小站</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/24/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%BA%8C)%20%E5%9B%BE%E7%9A%84%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E7%9F%A9%E9%98%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shengexwx">
+      <meta itemprop="description" content="越努力越幸运">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温馨小站">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          初探图卷积神经网络(二) 图的拉普拉斯矩阵
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-24 20:35:17" itemprop="dateCreated datePublished" datetime="2023-05-24T20:35:17+08:00">2023-05-24</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-05-26 20:13:30" itemprop="dateModified" datetime="2023-05-26T20:13:30+08:00">2023-05-26</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文主要介绍拉普拉斯算子和图拉普拉斯矩阵。</p>
+<span id="more"></span>
+
+<p>在介绍本节内容之前，我们需要知道图卷积神经网络的计算步骤。图结构作为非欧式结构（每个顶点的邻居个数可能不同，不具有平移不变性），无法像图像那样使用统一的卷积核进行卷积计算，那么将卷积神经网络应用到图结构上就需要借助一些其他的数学工具，傅里叶变换就是其中之一。数学上，两个函数的卷积等于各自求傅里叶变换之后进行乘积再进行逆傅里叶变换。那么图结构如何进行傅里叶变换？本文内容是图傅里叶变换的前置知识。</p>
+<h3 id="Laplace算子"><a href="#Laplace算子" class="headerlink" title="Laplace算子"></a>Laplace算子</h3><p>首先介绍微积分中的Laplace算子，数学上，定义一个多元函数$f(x_1,x_2,\dots,x_n)$的Laplace算子是所有自变量的非混合二阶偏导数之和，记作$\Delta f&#x3D;\sum_{i&#x3D;1}^{n}\frac{\partial^2f}{\partial x_i^2}$</p>
+<p>比如多元函数$f(x,y,z)$的Laplace算子是$\Delta f&#x3D;\frac{\partial^2f}{\partial x^2}+\frac{\partial^2f}{\partial y^2}+\frac{\partial^2f}{\partial z^2}$</p>
+<p>我们称近似计算导数值的方法为数值微分，如果$\Delta x$在$x$处接近于0，则在$x$点处的导数可以近似为$f^{‘}(x)\approx\frac{f(x+\Delta x)-f(x)}{\Delta x}$，该式为单侧差分公式，对于二阶导数，我们有</p>
+<p>$$\begin{align}f^{‘’}(x) &amp;\approx \frac{f^{‘}(x)-f^{‘}(x-\Delta x)}{\Delta x}\\ &amp;\approx \frac{\frac{f(x+\Delta x)-f(x)}{\Delta x}-\frac{f(x)-f(x-\Delta x)}{\Delta x}}{\Delta x}\\ &amp;&#x3D; \frac{f(x+\Delta x)+f(x-\Delta x)-2f(x)}{(\Delta x)^2} \end{align}$$</p>
+<p>将其应用到多元函数的Laplace算子上，则有</p>
+<p>$$\Delta f&#x3D;\frac{\partial^2f}{\partial x^2}+\frac{\partial^2f}{\partial y^2}\approx \frac{f(x+\Delta x,y)+f(x-\Delta x,y)-2f(x,y)}{(\Delta x)^2}+\frac{f(x,y+\Delta y)+f(x,y-\Delta y)-2f(x,y)}{(\Delta y)^2}$$</p>
+<p>如果是在图像上进行计算，我们可以将上式离散化处理，即对自变量进行采样，构成一个矩阵如下</p>
+<p>$$\begin{bmatrix} f(x_1,y_1) &amp; f(x_2,y_1) &amp; \dots &amp; f(x_n,y_1) \\ f(x_1,y_2) &amp; f(x_2,y_2) &amp; \dots &amp; f(x_n,y_2) \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ f(x_1,y_n) &amp; f(x_2,y_n) &amp; \dots &amp; f(x_n,y_n) \end{bmatrix}$$</p>
+<p>矩阵中$x$是水平方向，$y$是竖直方向，假设步长是1，即$\Delta x&#x3D;x_{i+1}-x_i&#x3D;1$，$\Delta y&#x3D;y_{i+1}-y_i&#x3D;1$，则点$(x_i,y_i)$处的Laplace算子近似为：</p>
+<p>$$\begin{align}\Delta f&amp;&#x3D; \frac{f(x+\Delta x,y)+f(x-\Delta x,y)-2f(x,y)}{(\Delta x)^2}+\frac{f(x,y+\Delta y)+f(x,y-\Delta y)-2f(x,y)}{(\Delta y)^2}\\ &amp;&#x3D;f(x_{i+1},y_i)+f(x_{i-1},y_i)+f(x_i,y_{i+1})+f(x_i,y_{i-1})-4f(x_i,y_i)\end{align}$$</p>
+<p>这个等式可以理解为$(x_i,y_i)$相邻的4个点函数值之和与$(x_i,y_i)$处函数值乘以4的差值</p>
+<p>还可以写成$\Delta f&#x3D; \sum\limits_{(k,l)\in N(i,j)}(f(x_k,y_l)-f(x_i,y_j))$，其中$N(i,j)$是$(x_i,y_i)$邻居节点集合</p>
+<h3 id="图的邻接矩阵和加权度矩阵"><a href="#图的邻接矩阵和加权度矩阵" class="headerlink" title="图的邻接矩阵和加权度矩阵"></a>图的邻接矩阵和加权度矩阵</h3><p>在介绍图的Laplace矩阵之前，需要对图的邻接矩阵和加权度矩阵有所了解，这里解简要介绍一下：</p>
+<p>图的邻接矩阵是图的一种存储方式，将图以矩阵的形式表示可以方便的使用线性代数的有关方法对其进行研究。假设一个图有$n$个节点，其邻接矩阵$A$有$n^2$个元素，并且矩阵中的元素$a_{ij}$表示边$(i,j)$的权重，如果节点$i$和节点$j$之间不存在边关系，则$a_{ij}&#x3D;0$</p>
+<p>图的加权度矩阵是有关图顶点的所有边的权重之和，有$n$个节点的图，其加权度矩阵$D$是一个$n\times n$的对角矩阵，对角元素表示节点且$d_{ii}&#x3D;\sum\limits_{j&#x3D;1}^na_{ij}$</p>
+<h3 id="图Laplace矩阵"><a href="#图Laplace矩阵" class="headerlink" title="图Laplace矩阵"></a>图Laplace矩阵</h3><p>在Laplace算子部分我们计算了图像中的Laplace算子，现在我们要把它推广到图结构中。和图像中的节点不同的是，图结构中的节点的连接关系不一定相同。如果将图节点看作函数值，则节点$i$处的Laplace算子为$\Delta f_i&#x3D;\sum\limits_{j\in N_i}(f_i-f_j)$，其中$N_i$是节点$i$所有邻居节点的集合。和前面不同的是，这里算子多了一个负号，图的边可以具有权重，加上权重后$\Delta f_i&#x3D;\sum\limits_{j\in N_i}a_{ij}(f_i-f_j)$</p>
+<p>因为当节点$i$和节点$j$之间不存在边关系时$a_{ij}&#x3D;0$，所以上式可以换一种写法：</p>
+<p>$$\Delta f_i&#x3D;\sum\limits_{j\in V}a_{ij}(f_i-f_j)&#x3D;\sum\limits_{j\in V}a_{ij}fi-\sum\limits_{j\in V}a_{ij}f_j&#x3D;d_if_i-a_if$$</p>
+<p>其中$d_i$就是节点$i$的加权度，$a_i$是邻接矩阵的第$i$行，$f$是所有节点构成的列向量，$a_if$表示它们的内积，对于图的所有节点，有</p>
+<p>$$\begin{align}\Delta f &amp;&#x3D; \begin{bmatrix}\Delta f_1 \\ \vdots\\\Delta f_n \end{bmatrix}&#x3D;\begin{bmatrix}d_1f_1-a_if \\ \vdots\\d_nf_n-a_nf \end{bmatrix}&#x3D;\begin{bmatrix}d_1 \\ &amp;\ddots\\&amp;&amp;d_n \end{bmatrix}\begin{bmatrix}f_1 \\ \vdots\\f_n \end{bmatrix}-\begin{bmatrix}a_1 \\ \vdots\\a_n \end{bmatrix}\begin{bmatrix}f_1 \\ \vdots\\f_n \end{bmatrix}&#x3D;(D-A)f \end{align}$$</p>
+<p>这个结果告诉我们，图的邻接矩阵和加权度矩阵之差作用在节点上构成了图的Laplace算子，$L&#x3D;D-A$组成了图的Laplace矩阵，并且对于无向图来说（这里不讨论有向图，有向图中以入度矩阵计算Laplace矩阵，同样是对称的）$A$和$D$都是对称矩阵，所以Laplace矩阵也是对称矩阵，其每行元素之和为0，代表了图的二阶导数。</p>
+<p>计算出图的Laplace矩阵有什么意义？其具有非常重要的性质，接下来介绍图Laplace矩阵的几个重要性质。</p>
+<h3 id="Laplace矩阵的重要性质"><a href="#Laplace矩阵的重要性质" class="headerlink" title="Laplace矩阵的重要性质"></a>Laplace矩阵的重要性质</h3><p>1.对任意向量$f\in \mathbb{R}^n$有$f^TLf&#x3D;\frac{1}{2}\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^na_{ij}(f_i-f_j)^2$</p>
+<p>2.Laplace矩阵是对称半正定的</p>
+<p>3.Laplace矩阵的最小特征值为0，其对应的特征向量为常向量1（所有分量为1）</p>
+<p>4.Laplace矩阵有$n$个非负实数特征值，且满足$0&#x3D;\lambda_1\leq\lambda_2\leq\dots\leq\lambda_n$</p>
+<p>接下来对这些性质进行证明：</p>
+<p>1和2：</p>
+<p>$$\begin{align}f^TLf &amp;&#x3D; f^TDf-f^TAf \\&amp;&#x3D;\sum\limits_{i&#x3D;1}^nd_if_i^2-\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^nf_if_ja_{ij} \\&amp;&#x3D;\frac{1}{2}(2\sum\limits_{i&#x3D;1}^nd_if_i^2-2\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^nf_if_ja_{ij}) \\&amp;&#x3D;\frac{1}{2}(\sum\limits_{i&#x3D;1}^nd_if_i^2-2\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^nf_if_ja_{ij}+\sum\limits_{j&#x3D;1}^nd_jf_j^2) \\&amp;&#x3D;\frac{1}{2}\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^na_{ij}(f_i-f_j)^2 \end{align}$$</p>
+<p>根据1，对任意非0向量$f$，有$f^TLf&#x3D;\frac{1}{2}\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^na_{ij}(f_i-f_j)^2\geq 0 $（二次型大于等于0），所以Laplace矩阵是半正定的</p>
+<p>3和4：</p>
+<p>$$\begin{align}|L|&#x3D;|D-A| &amp;&#x3D; \begin{vmatrix}\sum\limits_{j&#x3D;1}^nw_{1j}-w_{11} &amp; -w_{12} &amp; \dots &amp; -w_{1n} \\ -w_{21} &amp; \sum\limits_{j&#x3D;1}^nw_{2j}-w_{22} &amp; \dots &amp; -w_{2n} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ -w_{n1} &amp; -w_{n2} &amp; \dots &amp; \sum\limits_{j&#x3D;1}^nw_{nj}-w_{nn}\end{vmatrix} \\ &amp;&#x3D; \begin{vmatrix}\sum\limits_{j&#x3D;1,j\neq1}^nw_{1j} &amp; -w_{12} &amp; \dots &amp; -w_{1n} \\ -w_{21} &amp; \sum\limits_{j&#x3D;1,j\neq2}^nw_{2j} &amp; \dots &amp; -w_{2n} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ -w_{n1} &amp; -w_{n2} &amp; \dots &amp; \sum\limits_{j&#x3D;1,j\neq n}^nw_{nj}\end{vmatrix}\end{align}$$</p>
+<p>可以发现，将行列式的第2~n列全部加到第1列之后，第一列的值全部变为0，所以$|L|&#x3D;0$，必然存在至少一个特征值为0.假设$f&#x3D;1$(列向量)，则</p>
+<p>$$Lf&#x3D;L1&#x3D;(D-A)1&#x3D;[d_1,d_2,\dots,d_n]^T-[\sum\limits_{j&#x3D;1}^nw_{1j},\sum\limits_{j&#x3D;1}^nw_{2j},\dots,\sum\limits_{j&#x3D;1}^nw_{nj}]^T&#x3D;0$$</p>
+<p>这里利用了Laplace矩阵行内元素之和为0的结论，所以$1$是特征值0的特征向量，3成立，结合结论2和3可以得出结论4</p>
+<h3 id="归一化Laplace矩阵"><a href="#归一化Laplace矩阵" class="headerlink" title="归一化Laplace矩阵"></a>归一化Laplace矩阵</h3><p>将图Laplace矩阵进行归一化有两种方式，第一种是对称归一化，定义如下：</p>
+<p>$$L_{opt}&#x3D;D^{-1&#x2F;2}LD^{-1&#x2F;2}&#x3D;I-D^{-1&#x2F;2}WD^{-1&#x2F;2}$$</p>
+<p>$D^{\frac{1}{2}}$是$D$中所有元素取正平方根后的结果。相当于$L$中非对角线元素$l_{ij}$都除以$\sqrt{d_{ii}d_{jj}}$，对角线上元素都变为1</p>
+<p>$$\begin{align}<br>L_{sym} &amp; &#x3D;\begin{bmatrix}<br>1 &#x2F; \sqrt{d_{11}} &amp; 0 &amp; \dots &amp; 0 \\<br>0 &amp; 1 &#x2F; \sqrt{d_{22}} &amp; \dots &amp; 0 \\<br>\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\<br>0 &amp; 0 &amp; \ldots &amp; 1 &#x2F; \sqrt{d_{nn}}<br>\end{bmatrix}\begin{bmatrix}<br>l_{11} &amp; l_{12} &amp; \dots &amp; l_{1n} \\<br>l_{21} &amp; l_{22} &amp; \dots &amp; l_{2n} \\<br>\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\<br>l_{n1} &amp; l_{n2} &amp; \dots &amp; l_{nn}<br>\end{bmatrix}\begin{bmatrix}<br>1 &#x2F; \sqrt{d_{11}} &amp; 0 &amp; \dots &amp; 0 \\<br>0 &amp; 1 &#x2F; \sqrt{d_{22}} &amp; \dots &amp; 0 \\<br>\vdots &amp; \vdots &amp; \ddots &amp; \dots \\<br>0 &amp; 0 &amp; \dots &amp; 1 &#x2F; \sqrt{d_{nn}}<br>\end{bmatrix} \\<br>&amp;&#x3D; \begin{bmatrix}<br>1 &amp; l_{12} &#x2F; \sqrt{d_{11}d_{22}} &amp; \dots &amp; l_{1n} &#x2F; \sqrt{d_{11} d_{mn}} \\<br>l_{21} &#x2F; \sqrt{d_{22} d_{11}} &amp; 1 &amp; \dots &amp; l_{2n} &#x2F; \sqrt{d_{22}d_{mn}} \\<br>\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\<br>l_{n1} &#x2F; \sqrt{d_{nn} d_{11}} &amp; l_{n2} &#x2F; \sqrt{d_{nn} d_{22}} &amp; \dots &amp; 1<br>\end{bmatrix}<br>\end{align}$$</p>
+<p>$D$取平方根后仍为对称矩阵，所以$L_{sym}$也是对称矩阵，若图是联通的，则$D$和$D^\frac{1}{2}$都是可逆的对角矩阵，其逆矩阵是主对角元素的逆</p>
+<p>第二种是随机漫步归一化，定义如下：</p>
+<p>$$L_{rw}&#x3D;D^{-1}L&#x3D;I-D^{-1}W$$</p>
+<p>相当于$L$中非对角线元素$l_{ij}$都除以$d_{ii}$，对角线上元素同样都变为1</p>
+<p>$$\begin{align}L_{rw} &amp;&#x3D;\begin{bmatrix}1 &#x2F; d_{11} &amp; 0 &amp; \dots &amp; 0 \\ 0 &amp; 1 &#x2F; d_{22} &amp;\dots &amp; 0 \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ 0 &amp; 0 &amp; \dots &amp; 1 &#x2F; d_{nn} \end{bmatrix} \begin{bmatrix}l_{11} &amp; l_{12} &amp; \dots &amp; l_{1n} \\ l_{21} &amp; l_{22} &amp; \dots &amp; l_{2n} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ l_{n1} &amp; l_{n2} &amp; \dots &amp; l_{nn} \end{bmatrix} \\ &amp; &#x3D;\begin{bmatrix}1 &amp; l_{12} &#x2F; d_{11} &amp; \dots &amp; l_{1n} &#x2F; d_{11} \\ l_{21} &#x2F; d_{22} &amp; 1 &amp; \dots &amp; l_{2n} &#x2F; d_{22} \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\<br>l_{n1} &#x2F; d_{nn} &amp; l_{n2} &#x2F; d_{nn} &amp; \dots &amp; 1 \end{bmatrix}\end{align}$$</p>
+<h3 id="归一化Laplace矩阵重要性质"><a href="#归一化Laplace矩阵重要性质" class="headerlink" title="归一化Laplace矩阵重要性质"></a>归一化Laplace矩阵重要性质</h3><p>1.对任意向量$f\in \mathbb{R}^n$有$f^TL_{sym}f&#x3D;\frac{1}{2}\sum\limits_{i&#x3D;1}^n\sum\limits_{j&#x3D;1}^na_{ij}({\frac{f_{i}}{\sqrt{d_{i}}}}-{\frac{f_{j}}{\sqrt{d_{j}}}} )^2$</p>
+<p>2.$\lambda$是矩阵$L_{rw}$的特征值，$\mu$是对应的特征向量，当且仅当$\lambda$是$L_{sym}$的特征值且其特征向量是$w&#x3D;D^{\frac{1}{2}}\mu$</p>
+<p>3.$\lambda$是矩阵$L_{rw}$的特征值，$\mu$是对应的特征向量，当且仅当$\lambda$和$\mu$是$L u&#x3D;\lambda D u$广义特征值问题的解</p>
+<p>4.0是矩阵$L_{rw}$的特征值，对应的特征向量是常向量$1$.0是矩阵$L_{sym}$的特征值，对应的特征向量是常向量$D^{\frac{1}{2}}1$</p>
+<p>5.矩阵$L_{sym}$和$L_{rw}$是半正定矩阵，有$n$个非负实数特征值，并且满足$0&#x3D;\lambda_{1}\leq\lambda_{2}\leq…\leq\lambda_{n}$</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>shengexwx
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2023/05/24/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%BA%8C)%20%E5%9B%BE%E7%9A%84%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E7%9F%A9%E9%98%B5/" title="初探图卷积神经网络(二) 图的拉普拉斯矩阵">http://example.com/2023/05/24/初探图卷积神经网络(二) 图的拉普拉斯矩阵/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/GCN/" rel="tag"># GCN</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/05/18/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%B8%80)%20%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E5%92%8C%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2/" rel="prev" title="初探图卷积神经网络(一) 傅里叶级数和傅里叶变换">
+      <i class="fa fa-chevron-left"></i> 初探图卷积神经网络(一) 傅里叶级数和傅里叶变换
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Laplace%E7%AE%97%E5%AD%90"><span class="nav-number">1.</span> <span class="nav-text">Laplace算子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E7%9A%84%E9%82%BB%E6%8E%A5%E7%9F%A9%E9%98%B5%E5%92%8C%E5%8A%A0%E6%9D%83%E5%BA%A6%E7%9F%A9%E9%98%B5"><span class="nav-number">2.</span> <span class="nav-text">图的邻接矩阵和加权度矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BELaplace%E7%9F%A9%E9%98%B5"><span class="nav-number">3.</span> <span class="nav-text">图Laplace矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Laplace%E7%9F%A9%E9%98%B5%E7%9A%84%E9%87%8D%E8%A6%81%E6%80%A7%E8%B4%A8"><span class="nav-number">4.</span> <span class="nav-text">Laplace矩阵的重要性质</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%92%E4%B8%80%E5%8C%96Laplace%E7%9F%A9%E9%98%B5"><span class="nav-number">5.</span> <span class="nav-text">归一化Laplace矩阵</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%92%E4%B8%80%E5%8C%96Laplace%E7%9F%A9%E9%98%B5%E9%87%8D%E8%A6%81%E6%80%A7%E8%B4%A8"><span class="nav-number">6.</span> <span class="nav-text">归一化Laplace矩阵重要性质</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shengexwx"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shengexwx</p>
+  <div class="site-description" itemprop="description">越努力越幸运</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shengexwx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;shengexwx" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      链接网站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chat.openai.com/" title="https:&#x2F;&#x2F;chat.openai.com&#x2F;" rel="noopener" target="_blank">ChatGPT</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2023-05 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shengexwx</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">15k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">14 分钟</span>
+</div>
+  <div class="powered-by">
+    <!--由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动 -->
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>

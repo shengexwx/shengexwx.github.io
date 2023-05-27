@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/icon32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/icon16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"manual","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文主要介绍傅里叶级数和傅里叶变换。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探图卷积神经网络(一) 傅里叶级数和傅里叶变换">
+<meta property="og:url" content="http://example.com/2023/05/18/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%B8%80)%20%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E5%92%8C%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2/index.html">
+<meta property="og:site_name" content="温馨小站">
+<meta property="og:description" content="本文主要介绍傅里叶级数和傅里叶变换。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-05-18T01:21:45.000Z">
+<meta property="article:modified_time" content="2023-05-24T12:43:59.366Z">
+<meta property="article:author" content="shengexwx">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="GCN">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2023/05/18/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%B8%80)%20%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E5%92%8C%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>初探图卷积神经网络(一) 傅里叶级数和傅里叶变换 | 温馨小站</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">温馨小站</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/05/18/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%B8%80)%20%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E5%92%8C%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="shengexwx">
+      <meta itemprop="description" content="越努力越幸运">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="温馨小站">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          初探图卷积神经网络(一) 傅里叶级数和傅里叶变换
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-18 09:21:45" itemprop="dateCreated datePublished" datetime="2023-05-18T09:21:45+08:00">2023-05-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-05-24 20:43:59" itemprop="dateModified" datetime="2023-05-24T20:43:59+08:00">2023-05-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">学习</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文主要介绍傅里叶级数和傅里叶变换。</p>
+<span id="more"></span>
+
+<h3 id="三角函数的正交性"><a href="#三角函数的正交性" class="headerlink" title="三角函数的正交性"></a>三角函数的正交性</h3><p>在介绍本节内容之前，需要了解三角函数系有关知识.</p>
+<h4 id="三角函数系"><a href="#三角函数系" class="headerlink" title="三角函数系"></a>三角函数系</h4><p>众所周知，泰勒展开使用幂级数进行多项式拟合，而可以达成该目标的不仅是幂级数，其他本征函数例如三角函数系等也可以进行多项式拟合。类似于求解齐次方程与齐次边界条件构成的定解问题，使用幂级数和三角函数系等都可以作为本征函数。对于本征函数这个概念本文不深入讨论，可以简单理解它们是可以作为一组基底的函数即可.</p>
+<p>那么，什么是三角函数系？三角函数系是一种集合，集合中的元素包括如下：<br>$$<br>{1, sinx, cosx, sin2x, cos2x, …, sinnx, cosnx} (n&#x3D;0,1,…)<br>$$<br>显然集合元素$1&#x3D;cos0x$，$sin0x&#x3D;0$作为基底并无重要意义.</p>
+<h4 id="三角函数系的正交性"><a href="#三角函数系的正交性" class="headerlink" title="三角函数系的正交性"></a>三角函数系的正交性</h4><p>两个函数为正交关系的数学定义为函数内积为零，而函数内积是两个函数相乘后在区间上的积分，所以正交关系可以表示为$\int_{x_0}^{x_1}f(x)g(x)dx&#x3D;0$</p>
+<p>三角函数系的正交性为任取三角函数系中两个不同的函数都正交：</p>
+<p>区间取$[-\pi,\pi]$，任取不同函数情况有三种：$\int_{-\pi}^{\pi}sinmxsinnxdx$，$\int_{-\pi}^{\pi}sinmxcosnxdx$，$\int_{-\pi}^{\pi}cosmxcosnxdx$</p>
+<p>当$m\neq n$时，</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}sinmxsinnxdx &amp;&#x3D; \int_{-\pi}^{\pi}-\frac{1}{2}[cos(m+n)x-cos(m-n)x]dx \\ &amp;&#x3D; -\frac{1}{2} \left.[\frac{sin(m+n)x}{m+n}-\frac{sin(m-n)x}{m-n}]\right|_{-\pi}^{\pi} \\ &amp;&#x3D; 0 \end{align}$$</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}sinmxcosnxdx &amp;&#x3D; \int_{-\pi}^{\pi}\frac{1}{2}[sin(m+n)x+sin(m-n)x]dx \\ &amp;&#x3D; \frac{1}{2} \left.[-\frac{cos(m+n)x}{m+n}-\frac{cos(m-n)x}{m-n}]\right|_{-\pi}^{\pi} \\ &amp;&#x3D; 0 \end{align}$$</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}cosmxcosnxdx &amp;&#x3D; \int_{-\pi}^{\pi}\frac{1}{2}[cos(m+n)x+cos(m-n)x]dx \\ &amp;&#x3D; \frac{1}{2} \left.[\frac{sin(m+n)x}{m+n}+\frac{sin(m-n)x}{m-n}]\right|_{-\pi}^{\pi} \\ &amp;&#x3D; 0 \end{align}$$</p>
+<p>当$m&#x3D;n$时，</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}sinmxsinnxdx &amp;&#x3D; \int_{-\pi}^{\pi}sin^2nxdx \\ &amp;&#x3D; \int_{-\pi}^{\pi}-\frac{1}{2}[cos2nx-1]dx \\ &amp;&#x3D; \pi \end{align}$$</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}sinmxcosnxdx &amp;&#x3D; \int_{-\pi}^{\pi}sinnxcosnxdx \\ &amp;&#x3D; \int_{-\pi}^{\pi}\frac{1}{2}sin2nxdx \\ &amp;&#x3D; 0 \end{align}$$</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}cosmxcosnxdx &amp;&#x3D; \int_{-\pi}^{\pi}cos^2nxdx \\ &amp;&#x3D; \int_{-\pi}^{\pi}\frac{1}{2}[cos2nx+1]dx \\ &amp;&#x3D; \pi \end{align}$$</p>
+<p>至此，证明了三角函数系的正交性，该性质为计算傅里叶级数的系统提供了许多便利.</p>
+<h3 id="周期为-2-pi-函数的傅里叶级数"><a href="#周期为-2-pi-函数的傅里叶级数" class="headerlink" title="周期为$2\pi$函数的傅里叶级数"></a>周期为$2\pi$函数的傅里叶级数</h3><p>周期函数的傅里叶展开就是把该函数展开为三角函数系的累加形式，假设一个周期为$2\pi$的傅里叶级数为三角函数系级数的和：</p>
+<p>$$f(x)&#x3D;\sum_{n&#x3D;0}^{\infty}a_ncosnx+\sum_{n&#x3D;0}^{\infty}b_nsinnx$$</p>
+<p>将第一项单独提出，等式变为$f(x)&#x3D;a_0+\sum_{n&#x3D;1}^{\infty}(a_ncosnx+b_nsinnx)\tag{1}$</p>
+<p>接下来利用三角函数系的正交性对$a_0,a_n,b_n$进行求解.</p>
+<p>首先是对$a_0$的求解，对(1)式左右同时进行$-\pi$到$\pi$的积分：</p>
+<p>$$\int_{-\pi}^{\pi}f(x)dx&#x3D;\int_{-\pi}^{\pi}a_0dx+0+0&#x3D;2\pi a_0$$</p>
+<p>得出$a_0&#x3D;\frac{1}{2\pi}\int_{-\pi}^{\pi}f(x)dx$，将$a_0$设为$a_0&#x2F;2$，等式右边变为$\frac{1}{\pi}\int_{-\pi}^{\pi}f(x)dx$</p>
+<p>其次是对$a_n$的求解，对(1)式左右先同时乘以$cosmx$再进行$-\pi$到$\pi$的积分：</p>
+<p>$$\begin{align}\int_{-\pi}^{\pi}f(x)cosmxdx &amp;&#x3D;\int_{-\pi}^{\pi}a_0cosmxdx+\int_{-\pi}^{\pi}\sum_{n&#x3D;1}^{\infty}a_ncosmxcosnxdx+\int_{-\pi}^{\pi}\sum_{n&#x3D;1}^{\infty}b_ncosmxsinnxdx \\ &amp;&#x3D; \int_{-\pi}^{\pi}\sum_{n&#x3D;1}^{\infty}a_ncosmxcosnxdx\end{align}$$</p>
+<p>根据三角函数系的正交性定理，只有当$m&#x3D;n$时积分$\neq0$，即</p>
+<p>$$\int_{-\pi}^{\pi}f(x)cosnxdx&#x3D;a_n\int_{-\pi}^{\pi}\sum_{n&#x3D;1}^{\infty}cos^2nxdx&#x3D;a_n\pi$$</p>
+<p>得出$a_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}f(x)cosnxdx$</p>
+<p>最后是对$b_n$的求解，对(1)式左右先同时乘以$sinmx$再进行$-\pi$到$\pi$的积分</p>
+<p>得出$b_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}f(x)sinnxdx$，计算过程略.</p>
+<p>这样，我们就求出了周期为$2\pi$的函数的傅里叶级数，如下：</p>
+<p>$$f(x)&#x3D;\frac{a_0}{2}+\sum_{n&#x3D;1}^{\infty}(a_ncosnx+b_nsinnx)$$</p>
+<p>其中$a_0&#x3D;\frac{1}{\pi}\int_{-\pi}^{\pi}f(x)dx$，$a_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}f(x)cosnxdx$，$b_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}f(x)sinnxdx$</p>
+<h3 id="周期为-2L-函数的傅里叶级数"><a href="#周期为-2L-函数的傅里叶级数" class="headerlink" title="周期为$2L$函数的傅里叶级数"></a>周期为$2L$函数的傅里叶级数</h3><p>这一节我们将第二节的傅里叶级数从特定周期推广到更一般的形式，假设现在有一个周期为$2L$的函数$f(t)&#x3D;f(t+2L)$，我们需要计算其傅里叶级数，可以使用换元法进行操作。令$x&#x3D;\frac{\pi}{L}t$，则$t&#x3D;\frac{L}{\pi}x$，$t$和$x$的对应关系如下表：</p>
+<table>
+<thead>
+<tr>
+<th>$t$</th>
+<th>$x$</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>$2L$</td>
+<td>$2\pi$</td>
+</tr>
+<tr>
+<td>$4L$</td>
+<td>$4\pi$</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody></table>
+<p>是不是看起来非常眼熟？没错，通过这种换元方式可以将周期为$2L$的函数转换为周期为$2\pi$的函数，这样就变成了第二节的求解傅里叶级数的形式，即$f(t)&#x3D;f(\frac{L}{\pi}x)\triangleq g(x)$，其中$g(x)&#x3D;g(x+2\pi)$</p>
+<p>根据第二节的杰伦，$g(x)$的傅里叶级数为$g(x)&#x3D;\frac{a_0}{2}+\sum_{n&#x3D;1}^{\infty}(a_ncosnx+b_nsinnx)$</p>
+<p>其中$a_0&#x3D;\frac{1}{2\pi}\int_{-\pi}^{\pi}g(x)dx$，$a_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}g(x)cosnxdx$，$b_n&#x3D; \frac{1}{\pi} \int_{-\pi}^{\pi}g(x)sinnxdx$</p>
+<p>代入$x&#x3D;\frac{\pi}{L}t$，得$cosnx&#x3D;cos\frac{n\pi}{L}t$，$sinnx&#x3D;sin\frac{n\pi}{L}t$，$g(x)&#x3D;f(t)$</p>
+<p>$\int_{-\pi}^{\pi}dx&#x3D;\int_{-L}^{L}\frac{\pi}{L}dt$，即$\frac{1}{\pi} \int_{-\pi}^{\pi}dx&#x3D;\frac{1}{L} \int_{-L}^{L}dt$</p>
+<p>这样，我们就求出了周期为$2L$的函数的傅里叶级数，如下：</p>
+<p>$$f(t)&#x3D;\frac{a_0}{2}+\sum_{n&#x3D;1}^{\infty}(a_ncos\frac{n\pi}{L}t+b_nsin\frac{n\pi}{L}t)$$</p>
+<p>其中$a_0&#x3D;\frac{1}{L}\int_{-L}^{L}f(t)dt$，$a_n&#x3D; \frac{1}{L} \int_{-L}^{L}f(t)cos\frac{n\pi}{L}tdt$，$b_n&#x3D; \frac{1}{L} \int_{-L}^{L}f(t)sin\frac{n\pi}{L}tdt$</p>
+<p>当然，在工程中$t$不存在负数，从0开始，我们设定频率$w&#x3D;\frac{\pi}{L}&#x3D;\frac{2\pi}{T}$</p>
+<p>则积分关系$\int_{-L}^{L}dt \rightarrow \int_{0}^{2L}dt \rightarrow \int_{0}^{T}dt$，即</p>
+<p>$$f(t)&#x3D;\frac{a_0}{2}+\sum_{n&#x3D;1}^{\infty}(a_ncosnwt+b_nsinnwt)$$</p>
+<p>其中$a_0&#x3D;\frac{2}{T}\int_{0}^{T}f(t)dt$，$a_n&#x3D; \frac{2}{T} \int_{0}^{T}f(t)cosnwtdt$，$b_n&#x3D; \frac{2}{T} \int_{0}^{T}f(t)sinnwtdt$</p>
+<p>这样我们就获得了周期为$T$的函数的傅里叶级数</p>
+<h3 id="傅里叶级数的复数形式"><a href="#傅里叶级数的复数形式" class="headerlink" title="傅里叶级数的复数形式"></a>傅里叶级数的复数形式</h3><p>将傅里叶级数转换为复数形式需要借助欧拉公式：$e^{i\theta}&#x3D;cos\theta+isin\theta$</p>
+<p>将欧拉公式中的$\theta$取负号，等式变为$e^{-i\theta}&#x3D;cos\theta-isin\theta$，可以分别计算出</p>
+<p>$$cos\theta&#x3D;\frac{1}{2}(e^{i\theta}+e^{-i\theta}) \qquad sin\theta&#x3D;-\frac{1}{2}i(e^{i\theta}-e^{-i\theta})$$</p>
+<p>将结果代入到第3节的级数中，得到：</p>
+<p>$$\begin{align}f(t) &amp;&#x3D; \frac{a_0}{2}+\sum_{n&#x3D;1}^\infty [\frac{1}{2}a_n(e^{inwt}+e^{-inwt})-\frac{1}{2}ib_n(e^{inwt}-e^{-inwt})] \\ &amp;&#x3D; \frac{a_0}{2}+ \sum_{n&#x3D;1}^\infty(\frac{a_n-ib_n}{2}e^{inwt}+\frac{a_n+ib_n}{2}e^{-inwt}) \\ &amp;&#x3D; \sum_{n&#x3D;0}^0\frac{a_0}{2}e^{inwt}+\sum_{n&#x3D;1}^\infty \frac{a_n-ib_n}{2}e^{inwt}+\sum_{n&#x3D;-\infty}^{-1}\frac{a_{-n}+ib_{-n}}{2}e^{inwt} \\ &amp;&#x3D;\sum_{n&#x3D;-\infty}^{\infty}c_ne^{inwt} \end{align}$$</p>
+<p>其中，$c_n&#x3D;\left\lbrace \begin{aligned}\frac{a_0}{2} &amp;, &amp;n&#x3D;0 \\ \frac{a_n+ib_n}{2} &amp;, &amp;n&#x3D;1,2,\dots \\ \frac{a_{-n}+ib_{-n}}{2} &amp;, &amp; n&#x3D;-1,-2,\dots\end{aligned}\right.$ 继续计算$c_n$：</p>
+<p>$$\mathop{c_n}\limits_{n&#x3D;0}&#x3D;\frac{a_0}{2}&#x3D;\frac{1}{T}\int_0^Tf(t)dt&#x3D;\frac{1}{T}\int_0^Tf(t)e^0dt$$</p>
+<p>$$\begin{align}\mathop{c_n}\limits_{n&#x3D;1,2,…} &amp;&#x3D; \frac{1}{2}(\frac{2}{T}\int_0^Tf(t)cosnwtdt-i\frac{2}{T}\int_0^Tf(t)sinnwtdt) \\ &amp;&#x3D; \frac{1}{T}\int_0^Tf(t)(cosnwt-isinnwt)dt \\ &amp;&#x3D; \frac{1}{T}\int_0^Tf(t)e^{-inwt}dt\end{align}$$</p>
+<p>$$\begin{align}\mathop{c_n}\limits_{n&#x3D;1,2,…} &amp;&#x3D; \frac{1}{2}(\frac{2}{T}\int_0^Tf(t)cos(-nwt)dt+i\frac{2}{T}\int_0^Tf(t)sin(-nwt)dt) \\ &amp;&#x3D; \frac{1}{T}\int_0^Tf(t)(cosnwt-isinnwt)dt \\ &amp;&#x3D; \frac{1}{T}\int_0^Tf(t)e^{-inwt}dt\end{align}$$</p>
+<p>可以发现系数部分在复数形式下仍然保持统一，所以第3节的傅里叶级数的复数形式为：</p>
+<p>$f(t)&#x3D;\sum_{n&#x3D;-\infty}^{\infty}c_ne^{inwt}$，其中$c_n&#x3D;\frac{1}{T}\int_0^Tf(t)e^{-inwt}dt$</p>
+<h3 id="傅里叶变换-Fourier-Transform"><a href="#傅里叶变换-Fourier-Transform" class="headerlink" title="傅里叶变换(Fourier Transform)"></a>傅里叶变换(Fourier Transform)</h3><p>上一节我们计算了周期为T函数的傅里叶级数，其形式如下：</p>
+<p>$$f(t)&#x3D;\sum_{n&#x3D;-\infty}^{\infty}c_ne^{inw_0t}$$</p>
+<p>其中$w_0&#x3D;\frac{2\pi}{T}$，$c_n&#x3D;\frac{1}{T}\int_0^Tf(t)e^{-inw_0t}dt$，系数$c_n$起到定义函数的作用.</p>
+<p>傅里叶变换针对的是非周期函数转换到频域，换一个角度理解，非周期相当于$T\rightarrow \infty$，一个周期函数转换成了正常函数的形式$\mathop{lim}\limits_{T\rightarrow \infty}f_T(t)&#x3D;f(t)$</p>
+<p>在频域图上的表现就是横坐标差异的变化$\Delta w&#x3D;(n+1)w_0-nw_0&#x3D;\frac{2\pi}{T}$，随着周期的增大，$\Delta w$越来越小，当周期趋于无穷时，离散的频域图变为了连续的频域图，函数的傅里叶级数变化如下：</p>
+<p>$$\begin{align}f_T(t) &amp;&#x3D;\sum_{n&#x3D;-\infty}^\infty \frac{1}{T}\int_{-\frac{T}{2}}^{\frac{T}{2}}f_T(t)e^{-inw_0t}dte^{inw_0t}\\ &amp;&#x3D;\sum_{n&#x3D;-\infty}^\infty \frac{\Delta w}{2\pi}\int_{-\frac{T}{2}}^{\frac{T}{2}}f_T(t)e^{-inw_0t}dte^{inw_0t} \end{align}$$</p>
+<p>$T\rightarrow \infty $：$\int_{-\frac{T}{2}}^{\frac{T}{2}}dt\rightarrow \int_{-\infty}^{\infty}dt$，$nw_0\rightarrow w$，$\sum_{n&#x3D;-\infty}^{\infty}\Delta w\rightarrow \int_{-\infty}^{\infty}dw$，所以</p>
+<p>$$f(t)&#x3D;\frac{1}{2\pi}\int_{-\infty}^{\infty}\int_{-\infty}^{\infty}f(t)e^{-iwt}dte^{iwt}dw$$</p>
+<p>这是一个完整的傅里叶变换和逆傅里叶变换的公式，其中</p>
+<p>$F(w)&#x3D;\int_{-\infty}^{\infty}f(t)e^{-iwt}dt$是Fourier Transform</p>
+<p>而$f(t)&#x3D;\frac{1}{2\pi}\int_{-\infty}^{\infty}F(w)e^{iwt}dw$是逆傅里叶变换$F^{-1}(w)$</p>
+<p>至此，我们完成了傅里叶级数和傅里叶变换的数学推导.</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>shengexwx
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://example.com/2023/05/18/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%B8%80)%20%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E5%92%8C%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2/" title="初探图卷积神经网络(一) 傅里叶级数和傅里叶变换">http://example.com/2023/05/18/初探图卷积神经网络(一) 傅里叶级数和傅里叶变换/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/GCN/" rel="tag"># GCN</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/24/%E5%88%9D%E6%8E%A2%E5%9B%BE%E5%8D%B7%E7%A7%AF%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C(%E4%BA%8C)%20%E5%9B%BE%E7%9A%84%E6%8B%89%E6%99%AE%E6%8B%89%E6%96%AF%E7%9F%A9%E9%98%B5/" rel="next" title="初探图卷积神经网络(二) 图的拉普拉斯矩阵">
+      初探图卷积神经网络(二) 图的拉普拉斯矩阵 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E8%A7%92%E5%87%BD%E6%95%B0%E7%9A%84%E6%AD%A3%E4%BA%A4%E6%80%A7"><span class="nav-number">1.</span> <span class="nav-text">三角函数的正交性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E8%A7%92%E5%87%BD%E6%95%B0%E7%B3%BB"><span class="nav-number">1.1.</span> <span class="nav-text">三角函数系</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E8%A7%92%E5%87%BD%E6%95%B0%E7%B3%BB%E7%9A%84%E6%AD%A3%E4%BA%A4%E6%80%A7"><span class="nav-number">1.2.</span> <span class="nav-text">三角函数系的正交性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%A8%E6%9C%9F%E4%B8%BA-2-pi-%E5%87%BD%E6%95%B0%E7%9A%84%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">周期为$2\pi$函数的傅里叶级数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%A8%E6%9C%9F%E4%B8%BA-2L-%E5%87%BD%E6%95%B0%E7%9A%84%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0"><span class="nav-number">3.</span> <span class="nav-text">周期为$2L$函数的傅里叶级数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%82%85%E9%87%8C%E5%8F%B6%E7%BA%A7%E6%95%B0%E7%9A%84%E5%A4%8D%E6%95%B0%E5%BD%A2%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">傅里叶级数的复数形式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%82%85%E9%87%8C%E5%8F%B6%E5%8F%98%E6%8D%A2-Fourier-Transform"><span class="nav-number">5.</span> <span class="nav-text">傅里叶变换(Fourier Transform)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="shengexwx"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">shengexwx</p>
+  <div class="site-description" itemprop="description">越努力越幸运</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/shengexwx" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;shengexwx" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      链接网站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chat.openai.com/" title="https:&#x2F;&#x2F;chat.openai.com&#x2F;" rel="noopener" target="_blank">ChatGPT</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2023-05 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">shengexwx</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">15k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">14 分钟</span>
+</div>
+  <div class="powered-by">
+    <!--由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动 -->
+  </div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,255' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
