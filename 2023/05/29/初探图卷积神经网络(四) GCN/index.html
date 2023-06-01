@@ -30,7 +30,7 @@
 <meta property="og:description" content="本文介绍GCN相关理论">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-05-29T11:23:52.000Z">
-<meta property="article:modified_time" content="2023-06-01T00:31:23.794Z">
+<meta property="article:modified_time" content="2023-06-01T00:58:28.108Z">
 <meta property="article:author" content="shengexwx">
 <meta property="article:tag" content="深度学习">
 <meta property="article:tag" content="GCN">
@@ -227,7 +227,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-06-01 08:31:23" itemprop="dateModified" datetime="2023-06-01T08:31:23+08:00">2023-06-01</time>
+                <time title="修改时间：2023-06-01 08:58:28" itemprop="dateModified" datetime="2023-06-01T08:58:28+08:00">2023-06-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -296,7 +296,7 @@
 <p>3.对$\hat f$和$\hat h$进行对应元素的乘积，它们都$\in \mathbb{R}^{N\times1}$，也可以写成对角矩阵$diag[\hat h(\lambda_k)]$的形式，再和$\hat f$进行矩阵乘法</p>
 <p>4.最后进行逆傅里叶变换，即左乘$\Phi$</p>
 <p>综上，对图进行卷积的定义如下：</p>
-<p>$$(f*h)<em>{\mathcal{G}}&#x3D;\Phi \mathrm{diag}[\hat{h}(\lambda</em>{1}),\dots,\hat{h}(\lambda_{n})]\Phi^{T}f$$</p>
+<p>$$(f*h)<em>{\mathcal{G}}&#x3D;\Phi\mathrm{diag}[\hat{h}(\lambda</em>{1}),\dots,\hat{h}(\lambda_{n})]\Phi^{T}f$$</p>
 <h3 id="Graph-Convolotion在深度学习中的应用"><a href="#Graph-Convolotion在深度学习中的应用" class="headerlink" title="Graph Convolotion在深度学习中的应用"></a>Graph Convolotion在深度学习中的应用</h3><p>如果只是单纯的对两个函数进行图傅里叶变换再相乘取逆傅里叶变换，那么对于机器来说没有可学习的参数即卷积核，上一节中我们得出了图卷积的公式定义，但是需要选择卷积核。Spectral Networks and Locally Connected Networks on Graphs直接将$\mathrm{diag}[\hat{h}(\lambda_{1}),\cdot\cdot\cdot\hat{h}(\lambda_{n})]$设置为卷积核，将其变为参数形式$\mathrm{diag}[\theta_1,\cdot\cdot\cdot,\theta_n]$，其定义为：</p>
 <p>$$y_{output}&#x3D;\sigma(\Phi<del>g_{\theta}</del>\Phi^{T}x)&#x3D;\sigma(\Phi<del>\mathrm{diag}[\theta_{1},\dots,\theta_{n}]</del>\Phi^{T}x)$$</p>
 <p>$x$是节点特征向量$x&#x3D;(x_1,x_2,\dots,x_n)$，$y_{output}$是图卷积之后的输出，对所有节点都进行卷积操作之后再通过$\sigma$激活函数传入下一层，$g_{\theta}&#x3D;\mathrm{diag}[\theta_{1},\dots,\theta_{n}]$是卷积核。</p>
